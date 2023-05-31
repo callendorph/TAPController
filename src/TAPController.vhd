@@ -142,7 +142,7 @@ signal dout_has_data, dout_is_full : std_logic;
 
 -- @NOTE - this assumes that DATA_WIDTH is a power of 2
 --   if this is not the case - then we may see errors.
-constant dout_full : unsigned(BLEN-1 downto 0) := (others => '1');
+constant dout_full : unsigned(BLEN-1 downto 0) := to_unsigned(DATA_WIDTH, BLEN);
 
 -- JTAG signals
 signal pre_TMS : std_logic;
@@ -290,8 +290,8 @@ begin
   BITS_OUT <= std_logic_vector(dout_cnt);
 
   dout_has_data <= to_std_logic( dout_cnt > to_unsigned(0, BLEN));
-  dout_is_full <= to_std_logic( dout_cnt = dout_full );
-  shift_dout <= tck_rise_en and is_shifting and (not dout_is_full);
+  dout_is_full <= to_std_logic( dout_cnt >= dout_full );
+  shift_dout <= tck_rise_en and is_shifting;
 
   read_back : process(CLK)
   begin
@@ -312,6 +312,15 @@ begin
         if (tck_rise_en = '1') then
           dout_hold <= TDO & dout_hold(DATA_WIDTH-1 downto 1);
           dout_cnt <= dout_cnt + 1;
+          -- If dout_is_full is asserted it means that
+          --   we have already filled the register.
+          --   On this TCK rising edge - we have overflowed.
+          --   We will continue outputing the data on the
+          --   JTAG bus - but the user will not be able to
+          --   read back a consistent response any more.
+          if dout_is_full = '1' then
+            OVER_FLOW <= '1';
+          end if;
         end if;
         -- Scans can be longer than DATA_WIDTH - so we need
         --   to detect when we are full and alert the user
@@ -330,6 +339,9 @@ begin
             dout_hold <= (others => '0');
             dout_cnt <= (others => '0');
             if DOUT_VALID = '1' then
+              -- This kind of overflow is slightly different in
+              --   that it means the user failed to read the
+              --   last scan transaction.
               OVER_FLOW <= '1';
             end if;
             DOUT_VALID <= '0';
@@ -377,7 +389,10 @@ begin
         --   END_OF_SCAN doesn't matter here but it will
         --   matter in 'EX1' where decide whether to go to
         --   pause or update.
-        pre_TMS <= din_last_bit;
+        -- The WE here allows us to avoid the transition
+        --   from SH to EX1 if the user has a new word
+        --   ready to be written.
+        pre_TMS <= din_last_bit and (not WE);
       when S_EX1_DR | S_EX1_IR =>
         -- If this is the last word of the scan
         -- then we want to exit the sequence via UPDATE
