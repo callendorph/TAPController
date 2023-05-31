@@ -1,3 +1,11 @@
+----------------------------------------------
+-- This file contains a very basic testbench
+-- for the TAP Controller. The idea is to just
+-- show that read/write from the IR and DR
+-- are working. This doesn't test many of the corner
+-- conditions - it is only meant to be a starting
+-- point for further testing.
+----------------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -27,7 +35,7 @@ architecture sim of TAP_Basic is
   signal BITS_IN : std_logic_vector(BWIDTH-1 downto 0);
   signal DOUT : std_logic_vector(WIDTH-1 downto 0);
   signal BITS_OUT : std_logic_vector(BWIDTH-1 downto 0);
-  signal UNDER_FLOW, SCAN_DONE, LAST_BITS : std_logic;
+  signal UNDER_FLOW, SCAN_DONE, OVER_FLOW : std_logic;
   signal DOUT_VALID, DOUT_ACK : std_logic;
 
   signal IR_view : std_logic_vector(3 downto 0);
@@ -66,9 +74,9 @@ begin
       SCAN_DONE => SCAN_DONE,
       DOUT => DOUT,
       BITS_OUT => BITS_OUT,
-      LAST_BITS => LAST_BITS,
       DOUT_VALID => DOUT_VALID,
-      DOUT_ACK => DOUT_ACK
+      DOUT_ACK => DOUT_ACK,
+      OVER_FLOW => OVER_FLOW
       );
 
   DUT : JTAG_DUT
@@ -140,13 +148,61 @@ begin
 
     Write_Handshake(WE, WACK, clk_period, 100);
 
+    -- Value should be locked in now - so we can
+    --  remove the inputs.
+    DIN <= (others => '0');
+    BITS_IN <= (others => '0');
+
     -- There is a race condition here where if we don't at least
     --   let it get out of idle - then we will never wait for
     --   the state machine to return to idle.
     Wait_For_State(DUT_state, S_SEL_DR, tck_period, 10);
     Wait_For_State(DUT_state, S_IDLE, tck_period, 100);
 
+    -- Read the response value from the output
+    assert DOUT_VALID = '1' report "Invalid DOUT_VALID";
+    assert DOUT = X"20000000" report "Invalid DOUT";
+    assert BITS_OUT = to_slv(4, BWIDTH) report "Invalid BITS_OUT";
+
+    -- Generate the Read Ack - this way the overflow
+    --   flag does not trigger
+    Read_Handshake(DOUT_VALID, DOUT_ACK, clk_period);
+
+    assert UNDER_FLOW = '0';
+    assert OVER_FLOW = '0';
+
     assert IR_view = "1111" report "Failed to set IR to Bypass";
+
+    -- Device is in BYPASS mode now - so we should be able to send a
+    --   request through and see the same message echo'd back
+    --   one bit delayed.
+
+    DIN <= to_slv(16#AA55#, WIDTH);
+    BITS_in <= to_slv(16 + 1, BWIDTH);
+
+    DR_IR <= '0'; -- Write through the data register seq
+    END_OF_SCAN <= '1';
+
+    wait for clk_period*1;
+
+    Write_Handshake(WE, WACK, clk_period, 100);
+
+    Wait_For_State(DUT_state, S_SEL_DR, tck_period, 10);
+    Wait_For_State(DUT_state, S_IDLE, tck_period, 100);
+
+    -- Read the response value from the output
+    assert DOUT_VALID = '1' report "Invalid DOUT_VALID";
+    assert DOUT = X"AA550000" report "Invalid DOUT";
+    assert BITS_OUT = to_slv(16 + 1, BWIDTH) report "Invalid BITS_OUT";
+
+    -- Generate the Read Ack
+    Read_Handshake(DOUT_VALID, DOUT_ACK, clk_period);
+
+    wait for clk_period*5;
+
+    assert UNDER_FLOW = '0';
+    assert OVER_FLOW = '0';
+
 
     END_SIM <= '1';
     wait;

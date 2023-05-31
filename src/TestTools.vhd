@@ -26,6 +26,12 @@ package TestTools is
     max_cycles : in integer
     );
 
+  procedure Read_Handshake(
+    signal valid : in std_logic;
+    signal ack : out std_logic;
+    clk_period : in time
+    );
+
 end package;
 
 package body TestTools is
@@ -82,6 +88,17 @@ package body TestTools is
 
   end Wait_For_State;
 
-
+  procedure Read_Handshake(
+    signal valid : in std_logic;
+    signal ack : out std_logic;
+    clk_period : in time
+    ) is
+  begin
+    assert valid = '1' report "No Valid Data Available to Read";
+    ack <= '1';
+    wait for clk_period * 1;
+    assert valid = '0' report "Read Handshake - Failed to Deassert";
+    ack <= '0';
+  end Read_Handshake;
 
 end TestTools;

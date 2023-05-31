@@ -30,14 +30,15 @@ package CompDefs is
     WE : in std_logic;
     WACK : buffer std_logic;
 
-    UNDER_FLOW : out std_logic;
+    UNDER_FLOW : buffer std_logic;
     SCAN_DONE : out std_logic;
 
-    DOUT : buffer std_logic_vector(DATA_WIDTH-1 downto 0);
-    BITS_OUT : buffer std_logic_vector(Log2(DATA_WIDTH)-1 downto 0);
-    LAST_BITS : out std_logic;
-    DOUT_VALID : out std_logic;
-    DOUT_ACK : in std_logic
+    DOUT : out std_logic_vector(DATA_WIDTH-1 downto 0);
+    BITS_OUT : out std_logic_vector(Log2(DATA_WIDTH)-1 downto 0);
+    DOUT_VALID : buffer std_logic;
+    DOUT_ACK : in std_logic;
+    OVER_FLOW : buffer std_logic
+
     );
   end component TAPController;
 
