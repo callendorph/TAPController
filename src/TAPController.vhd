@@ -333,28 +333,7 @@ begin
               OVER_FLOW <= '1';
             end if;
             DOUT_VALID <= '0';
-          -- when S_SH_DR | S_SH_IR =>
-          --   if (tck_rise_en = '1') then
-          --     report "Shifting Data" severity error;
-          --     dout_hold <= TDO & dout_hold(DATA_WIDTH-1 downto 1);
-          --     dout_cnt <= dout_cnt + 1;
-          --   else
-          --     dout_hold <= dout_hold;
-          --     dout_cnt <= dout_cnt;
-          --   end if;
-          --   -- Scans can be longer than DATA_WIDTH - so we need
-          --   --   to detect when we are full and alert the user
-          --   --   that the buffer needs to be read.
-          --   if dout_cnt = dout_full then
-          --     DOUT_VALID <= '1';
-          --   else
-          --     DOUT_VALID <= '0';
-          --   end if;
           when S_UP_DR | S_UP_IR =>
-            -- @NOTE - this only works for the end of scan state.
-            --   it doesn't handle the case where
-            --   we transfer out more than DATA_WIDTH number
-            --   of bits.
             DOUT_VALID <= dout_has_data;
             dout_hold <= dout_hold;
             dout_cnt <= dout_cnt;
