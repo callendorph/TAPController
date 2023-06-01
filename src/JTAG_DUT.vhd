@@ -105,11 +105,11 @@ begin
 
   state_regs : process(CLK)
   begin
-    if (rising_edge(CLK)) then
-      if (RESET_n = '0') then
+    if rising_edge(CLK) then
+      if RESET_n = '0' then
         curr_state <= S_TLR;
       else
-        if ( tck_rise_en = '1' ) then
+        if tck_rise_en = '1' then
           curr_state <= next_state;
         else
           curr_state <= curr_state;

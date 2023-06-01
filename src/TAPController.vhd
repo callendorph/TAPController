@@ -167,11 +167,11 @@ begin
   -- JTAG bus State
   state_regs : process(CLK)
   begin
-    if (rising_edge(CLK)) then
-      if (RESET_n = '0') then
+    if rising_edge(CLK) then
+      if RESET_n = '0' then
         curr_state <= S_IDLE;
       else
-        if ( tck_rise_en = '1' ) then
+        if tck_rise_en = '1' then
           curr_state <= next_state;
         else
           curr_state <= curr_state;
@@ -347,7 +347,7 @@ begin
             dout_hold <= (others => '0');
             dout_cnt <= (others => '0');
           when S_SH_DR | S_SH_IR =>
-            if (tck_rise_en = '1') then
+            if tck_rise_en = '1' then
               dout_hold <= TDO & dout_hold(DATA_WIDTH-1 downto 1);
               dout_cnt <= dout_cnt + 1;
             end if;
@@ -422,10 +422,10 @@ begin
   tms_reg : process(CLK)
   begin
     if rising_edge(CLK) then
-      if (RESET_n = '0') then
+      if RESET_n = '0' then
         TMS <= '0';
         TDI <= '1';
-      elsif (TCK_FALL_EN = '1') then
+      elsif TCK_FALL_EN = '1' then
         -- To force a reset we drive the TMS high
         --   for at least 5 TCK clock cycles.
         TMS <= FORCE_RESET or pre_TMS;

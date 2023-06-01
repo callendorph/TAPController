@@ -43,25 +43,25 @@ package body JTAG is
 
       case curr_state is
         when S_TLR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_TLR;
           else
             next_state <= S_IDLE;
           end if;
         when S_IDLE =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_SEL_DR;
           else
             next_state <= S_IDLE;
           end if;
         when S_SEL_DR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_SEL_IR;
           else
             next_state <= S_CAP_DR;
           end if;
         when S_SEL_IR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_TLR;
           else
             next_state <= S_CAP_IR;
@@ -69,37 +69,37 @@ package body JTAG is
 
         -- Data Sequence
         when S_CAP_DR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_EX1_DR;
           else
             next_state <= S_SH_DR;
           end if;
         when S_SH_DR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_EX1_DR;
           else
             next_state <= S_SH_DR;
           end if;
         when S_EX1_DR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_UP_DR;
           else
             next_state <= S_PAUSE_DR;
           end if;
         when S_PAUSE_DR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_EX2_DR;
           else
             next_state <= S_PAUSE_DR;
           end if;
         when S_EX2_DR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_UP_DR;
           else
             next_state <= S_SH_DR;
           end if;
         when S_UP_DR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_SEL_DR;
           else
             next_state <= S_IDLE;
@@ -107,37 +107,37 @@ package body JTAG is
 
         -- Instruction Sequence
         when S_CAP_IR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_EX1_IR;
           else
             next_state <= S_SH_IR;
           end if;
         when S_SH_IR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_EX1_IR;
           else
             next_state <= S_SH_IR;
           end if;
         when S_EX1_IR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_UP_IR;
           else
             next_state <= S_PAUSE_IR;
           end if;
         when S_PAUSE_IR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_EX2_IR;
           else
             next_state <= S_PAUSE_IR;
           end if;
         when S_EX2_IR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_UP_IR;
           else
             next_state <= S_SH_IR;
           end if;
         when S_UP_IR =>
-          if (TMS = '1') then
+          if TMS = '1' then
             next_state <= S_SEL_IR;
           else
             next_state <= S_IDLE;
