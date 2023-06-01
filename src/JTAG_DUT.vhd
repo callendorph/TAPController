@@ -183,16 +183,7 @@ begin
                   TDO <= bypass_reg;
                 end if;
             end case;
-          when S_UP_DR =>
-            case IR is
-              when EXTEST | SAMPLE =>
-                if tck_fall_en = '1' then
-                  report "BSR Update: " & to_string(BSR);
-                end if;
-              when others => null;
-            end case;
           when others => null;
-
         end case;
       end if;
     end if;
