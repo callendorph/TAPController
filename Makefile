@@ -5,8 +5,11 @@ FLAGS=
 #  warnings that come from numeric-std at T=0
 SIM_FLAGS=--ieee-asserts=disable-at-0
 # @NOTE - This is useful for when we want to batch
-#   run the tests (for example, in CI).
-#SIM_FLAGS=--assert-level=error
+#   run the tests (for example, in CI) and we want
+#   to indicate that the tests have not passed.
+ifeq ($(ASSERT_ERR), 1)
+	SIM_FLAGS += --assert-level=error
+endif
 
 TEST_DIR=./tests
 # Tests should be files at the path "tests/{entity}.vhd"
