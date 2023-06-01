@@ -1,7 +1,9 @@
 
 HDL=ghdl
 FLAGS=
-SIM_FLAGS=
+# This option is useful for silencing certain
+#  warnings that come from numeric-std at T=0
+SIM_FLAGS=--ieee-asserts=disable-at-0
 # @NOTE - This is useful for when we want to batch
 #   run the tests (for example, in CI).
 #SIM_FLAGS=--assert-level=error
