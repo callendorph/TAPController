@@ -101,7 +101,6 @@ begin
 
   -- Tickle the signals
   stim : process
-    variable i : integer;
   begin
     ID <= X"55AA1122";
     BS <= X"0011223344556677";

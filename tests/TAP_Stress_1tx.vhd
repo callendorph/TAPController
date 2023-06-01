@@ -115,7 +115,6 @@ begin
 
   -- Tickle the signals
   stim : process
-    -- variable i : integer;
     variable msg_len : integer;
     variable max_val: integer;
     variable msg_mask, exp_val : std_logic_vector(WIDTH-1 downto 0);

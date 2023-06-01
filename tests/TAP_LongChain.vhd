@@ -101,7 +101,6 @@ begin
 
   -- Tickle the signals
   stim : process
-    variable i : integer;
     variable avoid_states : JTAG_STATE_ARRAY_t(1 downto 0) := (S_PAUSE_DR,S_TLR);
   begin
     ID <= X"55AA1122";
