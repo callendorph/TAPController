@@ -10,7 +10,8 @@ TEST_DIR=./tests
 # Tests should be files at the path "tests/{entity}.vhd"
 #   Where '{entity}' is the top level entity in the test.
 #   Entity names must be unique for all tests to run.
-TESTS = $(basename $(notdir $(wildcard $(TEST_DIR)/*.vhd)))
+TEST_FILES = $(wildcard $(TEST_DIR)/*.vhd)
+TESTS = $(basename $(notdir $(TEST_FILES)))
 
 SRC_DIR=./src
 # @NOTE - Order here matters because of the way
@@ -29,11 +30,12 @@ WAVES_DIR=./waves
 
 all: make_waves $(TESTS)
 
-%: $(TEST_DIR)/%.vhd $(SRCS)
-	$(HDL) -a $(FLAGS) $(SRCS) $<
+build-all: $(TEST_FILES) $(SRCS)
+	$(HDL) -a $(FLAGS) $(SRCS) $(TEST_FILES)
+
+%: $(TEST_DIR)/%.vhd $(SRCS) build-all
 	$(HDL) -e $(FLAGS) $@
-	$(HDL) -r $(FLAGS) $@ \
-		$(SIM_FLAGS) \
+	$(HDL) -r $(FLAGS) $@ $(SIM_FLAGS) \
 		--wave=$(WAVES_DIR)/$@.ghw
 
 make_waves:
