@@ -12,6 +12,12 @@ package TestTools is
     clk_period : in time
     );
 
+  procedure Wait_On(
+    signal enable : in std_logic;
+    clk_period : in time;
+    max_cycles : in integer
+    );
+
   procedure Write_Handshake(
     signal write_en : out std_logic;
     signal write_ack : in std_logic;
@@ -52,6 +58,22 @@ package body TestTools is
     end if;
   end Cycle_Clock;
 
+  procedure Wait_On(
+    signal enable : in std_logic;
+    clk_period : in time;
+    max_cycles : in integer
+    ) is
+    variable i : integer;
+  begin
+    i := 0;
+    while enable = '0' loop
+      wait for clk_period * 1;
+
+      i := i+1;
+      assert i < max_cycles report "Timeout Waiting for Signal Assertion" severity failure;
+    end loop;
+  end Wait_On;
+
   procedure Write_Handshake(
     signal write_en : out std_logic;
     signal write_ack : in std_logic;
@@ -62,12 +84,7 @@ package body TestTools is
   begin
     i := 0;
     write_en <= '1';
-    while write_ack = '0' loop
-      wait for clk_period * 1;
-
-      i := i+1;
-      assert i < max_cycles report "Timeout Waiting for ACK in Write Handshake" severity failure;
-    end loop;
+    Wait_On(write_ack, clk_period, max_cycles);
     write_en <= '0';
   end Write_Handshake;
 
