@@ -134,10 +134,9 @@ signal tck_d1 : std_logic;
 signal din_hold, dout_hold : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal din_cnt, dout_cnt : unsigned(BLEN-1 downto 0);
 signal EOS_hold : std_logic;
--- Observers of the input state
-signal din_empty, din_last_bit, is_shifting : std_logic;
--- Command Bits for the shift operations
-signal shift_din, enters_pause : std_logic;
+-- Observers of the shift register state
+signal din_empty, din_last_bit : std_logic;
+signal enters_pause : std_logic;
 signal dout_has_data, dout_is_full : std_logic;
 
 -- @NOTE - this assumes that DATA_WIDTH is a power of 2
@@ -190,6 +189,10 @@ begin
   -----------------------------
   -- DUT Write Shift Register
   -----------------------------
+
+  din_empty <= to_std_logic( din_cnt = to_unsigned(0, BLEN) );
+  din_last_bit <= to_std_logic( din_cnt = to_unsigned(1, BLEN) );
+
   shift_regs : process(CLK)
   begin
     if rising_edge(CLK) then
@@ -198,65 +201,46 @@ begin
         din_cnt <= (others => '0');
         EOS_hold <= '0';
         WACK <= '0';
+      elsif din_empty = '1' and WE = '1' and TCK = '0' then
+        -- Handshake to acknowledge the new data.
+        din_hold <= DIN;
+        din_cnt <= unsigned(BITS_IN);
+        EOS_hold <= END_OF_SCAN;
+        WACK <= '1';
       else
-        if (shift_din = '1') then
-          -- din_hold(0) is what get presented as TDI
-          --  We shift values from the left to right
-          din_hold <= '0' & din_hold(DATA_WIDTH-1 downto 1);
-          if din_empty = '0' then
-            din_cnt <= din_cnt - 1;
-          else
-            -- This is an underflow condition
-            --  the TMS control sequence manages
-            --  the transition to PAUSE to wait for
-            --  the host to insert more data as needed.
-            din_cnt <= din_cnt;
-          end if;
-          EOS_hold <= EOS_hold;
-          WACK <= '0';
-        else
-          if (din_empty = '1' and TCK = '0' and WE = '1' ) then
-            -- The user is attempting to load a new value
-            --   into the din_hold register for shifting out to
-            --   the DUT.
-            din_hold <= DIN;
-            din_cnt <= unsigned(BITS_IN);
-            EOS_hold <= END_OF_SCAN;
-            -- Handshake to acknowledge the new data.
-            WACK <= '1';
-          else
+        case curr_state is
+          when S_SH_DR | S_SH_IR =>
+            if tck_fall_en = '1' and din_empty = '0' then
+              -- din_hold(0) is what get presented as TDI
+              --  We shift values from the left to right
+              din_hold <= '0' & din_hold(DATA_WIDTH-1 downto 1);
+              din_cnt <= din_cnt - 1;
+            end if;
+            EOS_hold <= EOS_hold;
+            WACK <= '0';
+          when others =>
             din_hold <= din_hold;
             din_cnt <= din_cnt;
             EOS_hold <= EOS_hold;
             WACK <= '0';
-          end if;
-        end if;
+        end case;
       end if;
     end if;
   end process shift_regs;
-
-  din_empty <= to_std_logic( din_cnt = to_unsigned(0, BLEN) );
-  din_last_bit <= to_std_logic( din_cnt = to_unsigned(1, BLEN) );
-
-  shift_din <= tck_fall_en and is_shifting and (not din_empty);
 
   utils : process(curr_state, pre_TMS)
   begin
     case curr_state is
       when S_SH_DR | S_SH_IR =>
-        is_shifting <= '1';
         SCAN_DONE <= '0';
         enters_pause <= '0';
       when S_UP_DR | S_UP_IR =>
-        is_shifting <= '0';
         SCAN_DONE <= '1';
         enters_pause <= '0';
       when S_EX1_DR | S_EX1_IR =>
         enters_pause <= not pre_TMS;
-        is_shifting <= '0';
         SCAN_DONE <= '0';
       when others =>
-        is_shifting <= '0';
         SCAN_DONE <= '0';
         enters_pause <= '0';
     end case;
