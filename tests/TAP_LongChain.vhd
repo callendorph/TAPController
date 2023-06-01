@@ -216,9 +216,85 @@ begin
 
     wait for clk_period*5;
 
-    assert UNDER_FLOW = '0';
-    assert OVER_FLOW = '0';
+    assert UNDER_FLOW = '0' report "Invalid Underflow";
+    assert OVER_FLOW = '0' report "Invalid Overflow";
 
+    assert BSR_view = X"0000000000000000" report "Invalid BSR Update";
+
+    ----------------------------------------
+    -- Repeat this test but instead of
+    --  two 32-bit transactions, we're going to
+    --  do 4 variable length transactions.
+    ----------------------------------------
+
+    DIN <= to_slv(16#60AA1#, WIDTH);
+    BITS_in <= to_slv(20, BWIDTH);
+
+    DR_IR <= '0'; -- Write through the data register seq
+    -- 4 transactions.
+    END_OF_SCAN <= '0';
+
+    wait for clk_period*1;
+
+    Write_Handshake(WE, WACK, clk_period, 100);
+
+    wait for tck_period *2;
+
+    DIN <= to_slv(16#05502#, WIDTH);
+    BITS_in <= to_slv(20, BWIDTH);
+    END_OF_SCAN <= '0';
+    Write_Handshake(WE, WACK, clk_period, 400);
+
+    assert UNDER_FLOW = '0' report "Invalid Underflow";
+    assert OVER_FLOW = '0' report "Invalid Overflow";
+
+    -- We need to read the dout register to avoid
+    --  an overflow
+    --
+    Wait_On(DOUT_VALID, clk_period, 400);
+
+    assert UNDER_FLOW = '0' report "Invalid Underflow";
+    assert OVER_FLOW = '0' report "Invalid Overflow";
+
+    assert DOUT_VALID = '1' report "Invalid DOUT_VALID";
+    assert DOUT = X"44556677" report "Invalid DOUT";
+    assert BITS_OUT = to_slv(32, BWIDTH) report "Invalid BITS_OUT";
+
+    -- Generate the Read Ack
+    Read_Handshake(DOUT_VALID, DOUT_ACK, clk_period);
+
+    -- Finish out the remaining two transactions
+
+    DIN <= to_slv(16#0302#, WIDTH);
+    BITS_in <= to_slv(10, BWIDTH);
+    END_OF_SCAN <= '0';
+
+    Write_Handshake(WE, WACK, clk_period, 400);
+
+    wait for tck_period *2;
+
+    DIN <= to_slv(16#3444#, WIDTH);
+    BITS_in <= to_slv(14, BWIDTH);
+    END_OF_SCAN <= '1';
+
+    Write_Handshake(WE, WACK, clk_period, 400);
+
+    Wait_For_State_With_Avoids(DUT_state, S_IDLE, avoid_states, tck_period, 400);
+
+
+    assert DOUT_VALID = '1' report "Invalid DOUT_VALID";
+    assert DOUT = X"00112233" report "Invalid DOUT";
+    assert BITS_OUT = to_slv(32, BWIDTH) report "Invalid BITS_OUT";
+
+    -- Generate the Read Ack
+    Read_Handshake(DOUT_VALID, DOUT_ACK, clk_period);
+
+    -- Check that the BSR register got updated to the
+    --  proper
+    assert BSR_view = X"D113020550260AA1" report "Invalid BSR Update";
+
+    assert UNDER_FLOW = '0' report "Invalid Underflow";
+    assert OVER_FLOW = '0' report "Invalid Overflow";
 
     END_SIM <= '1';
     wait;
