@@ -137,7 +137,7 @@ signal EOS_hold : std_logic;
 -- Observers of the input state
 signal din_empty, din_last_bit, is_shifting : std_logic;
 -- Command Bits for the shift operations
-signal shift_din, shift_dout, enters_pause : std_logic;
+signal shift_din, enters_pause : std_logic;
 signal dout_has_data, dout_is_full : std_logic;
 
 -- @NOTE - this assumes that DATA_WIDTH is a power of 2
@@ -291,73 +291,89 @@ begin
 
   dout_has_data <= to_std_logic( dout_cnt > to_unsigned(0, BLEN));
   dout_is_full <= to_std_logic( dout_cnt >= dout_full );
-  shift_dout <= tck_rise_en and is_shifting;
 
-  read_back : process(CLK)
+  dout_control : process(CLK)
   begin
     if rising_edge(CLK) then
       if RESET_n = '0' then
         DOUT_VALID <= '0';
+        OVER_FLOW <= '0';
+      else
+        if DOUT_ACK = '1' then -- Handshake
+          DOUT_VALID <= '0';
+          OVER_FLOW <= '0';
+        else
+          case curr_state is
+            when S_CAP_DR | S_CAP_IR =>
+              -- This is the start of a new transaction
+              if DOUT_VALID = '1' then
+                -- This kind of overflow means the user
+                --   failed to read the last scan before the
+                --   start of a new transaction.
+                OVER_FLOW <= '1';
+              end if;
+              DOUT_VALID <= '0';
+            when S_SH_DR | S_SH_IR => -- Shifting
+              if dout_is_full = '1' then
+                DOUT_VALID <= '1';
+                if tck_rise_en = '1' then
+                  -- This kind of overflow means that we have
+                  --  shifted DATA_WIDTH number of bits in, the
+                  --  user has started another word to shift out,
+                  --  but has not read the latest received value yet.
+                  --  Kind of a mid chain sequence overflow.
+                  OVER_FLOW <= '1';
+                end if;
+              end if;
+            when S_UP_DR | S_UP_IR =>
+              DOUT_VALID <= dout_has_data;
+              OVER_FLOW <= OVER_FLOW;
+            when others =>
+              DOUT_VALID <= DOUT_VALID;
+              OVER_FLOW <= OVER_FLOW;
+          end case;
+        end if;
+      end if;
+    end if;
+  end process dout_control;
+
+  dout_regs : process(CLK)
+  begin
+    if rising_edge(CLK) then
+      if RESET_n = '0' then
         dout_hold <= (others => '0');
         dout_cnt <= (others => '0');
-        OVER_FLOW <= '0';
       elsif DOUT_ACK = '1' then
         -- User is attempting to read the state of the
         --   DOUT - we complete the handshake.
-        DOUT_VALID <= '0';
-        OVER_FLOW <= '0';
         dout_hold <= dout_hold;
-        dout_cnt <= dout_cnt;
-      elsif (shift_dout = '1') then
-        if (tck_rise_en = '1') then
-          dout_hold <= TDO & dout_hold(DATA_WIDTH-1 downto 1);
-          dout_cnt <= dout_cnt + 1;
-          -- If dout_is_full is asserted it means that
-          --   we have already filled the register.
-          --   On this TCK rising edge - we have overflowed.
-          --   We will continue outputing the data on the
-          --   JTAG bus - but the user will not be able to
-          --   read back a consistent response any more.
-          if dout_is_full = '1' then
-            OVER_FLOW <= '1';
-          end if;
-        end if;
-        -- Scans can be longer than DATA_WIDTH - so we need
-        --   to detect when we are full and alert the user
-        --   that the buffer needs to be read.
-        if dout_is_full = '1' then
-          DOUT_VALID <= '1';
-        else
-          DOUT_VALID <= '0';
-        end if;
+        -- We must clear the counter here because other
+        --  signals for valid/overflow depend on this
+        --  register
+        dout_cnt <= (others => '0');
       else
         case curr_state is
           when S_CAP_DR | S_CAP_IR =>
             -- Reset dout buffer and count
-            --  if DOUT_VALID is still asserted this means there has
-            --  been a buffer overflow.
+            --   @NOTE - Due to the bit count presented to the
+            --   user - reset of the dout_hold register isn't
+            --   strictly necessary. Any remaining bits will be
+            --   shifted to the right out of the valid range
+            --   indicated by BITS_OUT.
             dout_hold <= (others => '0');
             dout_cnt <= (others => '0');
-            if DOUT_VALID = '1' then
-              -- This kind of overflow is slightly different in
-              --   that it means the user failed to read the
-              --   last scan transaction.
-              OVER_FLOW <= '1';
+          when S_SH_DR | S_SH_IR =>
+            if (tck_rise_en = '1') then
+              dout_hold <= TDO & dout_hold(DATA_WIDTH-1 downto 1);
+              dout_cnt <= dout_cnt + 1;
             end if;
-            DOUT_VALID <= '0';
-          when S_UP_DR | S_UP_IR =>
-            DOUT_VALID <= dout_has_data;
-            dout_hold <= dout_hold;
-            dout_cnt <= dout_cnt;
           when others =>
-            DOUT_VALID <= DOUT_VALID;
             dout_hold <= dout_hold;
             dout_cnt <= dout_cnt;
-            OVER_FLOW <= OVER_FLOW;
         end case;
       end if;
     end if;
-  end process read_back;
+  end process dout_regs;
 
   ------------------------
   -- TMS Control
