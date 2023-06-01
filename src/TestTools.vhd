@@ -25,6 +25,14 @@ package TestTools is
     max_cycles : in integer
     );
 
+  procedure Wait_For_State_With_Avoids(
+    signal DUT_state : in JTAG_STATE_t;
+    exp_state : in JTAG_STATE_t;
+    avoid_states : in JTAG_STATE_ARRAY_t;
+    clk_period : in time;
+    max_cycles : in integer
+    );
+
   procedure Wait_For_State(
     signal DUT_state : in JTAG_STATE_t;
     exp_state : in JTAG_STATE_t;
@@ -95,15 +103,42 @@ package body TestTools is
     max_cycles : in integer
     ) is
     variable i : integer;
+    -- @NOTE - the syntax here is a little strange - but
+    --   the idea is that '0 downto 1' is an invalid range
+    --   so this will produce an empty array. We then just initialize
+    --   with the 'others' and a random value. That random value
+    --   does not get used.
+    constant empty_set : JTAG_STATE_ARRAY_t(0 downto 1) := (others => S_TLR);
+
+  begin
+    Wait_For_State_With_Avoids(DUT_state, exp_state, empty_set, clk_period, max_cycles);
+  end Wait_For_State;
+
+  procedure Wait_For_State_With_Avoids(
+    signal DUT_state : in JTAG_STATE_t;
+    exp_state : in JTAG_STATE_t;
+    avoid_states : in JTAG_STATE_ARRAY_t;
+    clk_period : in time;
+    max_cycles : in integer
+    ) is
+    variable i : integer;
   begin
     i := 0;
-    while not ( DUT_state = exp_state ) loop
+    check_state : while not (DUT_state = exp_state) loop
       wait for clk_period * 1;
       i := i + 1;
       assert i < max_cycles report "Timeout Waiting for JTAG State" severity failure;
-    end loop;
 
-  end Wait_For_State;
+      if avoid_states'LENGTH = 0 then
+        next check_state;
+      end if;
+
+      for j in 0 to avoid_states'LENGTH loop
+        assert not (DUT_state = avoid_states(0))
+          report "JTAG State Machine Entered Invalid State!";
+      end loop;
+    end loop;
+  end Wait_For_State_With_Avoids;
 
   procedure Read_Handshake(
     signal valid : in std_logic;

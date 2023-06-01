@@ -22,6 +22,8 @@ package JTAG is
     S_UP_IR
   );
 
+  type JTAG_STATE_ARRAY_t is array(natural range<>) of JTAG_STATE_t;
+
   procedure JTAG_state_transitions(
     signal curr_state : in JTAG_STATE_t;
     signal TMS : in std_logic;
