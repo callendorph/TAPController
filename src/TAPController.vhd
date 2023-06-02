@@ -139,8 +139,6 @@ signal din_empty, din_last_bit : std_logic;
 signal enters_pause : std_logic;
 signal dout_has_data, dout_is_full : std_logic;
 
--- @NOTE - this assumes that DATA_WIDTH is a power of 2
---   if this is not the case - then we may see errors.
 constant dout_full : unsigned(BLEN-1 downto 0) := to_unsigned(DATA_WIDTH, BLEN);
 
 -- JTAG signals
