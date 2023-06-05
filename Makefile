@@ -1,6 +1,6 @@
 
 HDL=ghdl
-FLAGS=
+FLAGS= --std=08
 # This option is useful for silencing certain
 #  warnings that come from numeric-std at T=0
 SIM_FLAGS=--ieee-asserts=disable-at-0
