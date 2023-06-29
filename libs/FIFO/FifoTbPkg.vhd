@@ -225,7 +225,7 @@ package body FifoTbPkg is
     result_dir : string
     ) is
   begin
-      SetTestName("Fifo_" & name);
+      SetTestName(name);
       SetLogEnable(PASSED, TRUE);
 
       wait for 0 ns;

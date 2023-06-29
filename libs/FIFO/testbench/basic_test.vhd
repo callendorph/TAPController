@@ -104,10 +104,10 @@ begin
 
 end basic_test;
 
-configuration Fifo_BasicTest of TbFifoVC is
+configuration basic_test of TbFifoVC is
   for TestHarness
     for TestDriver : TestCtrl
       use entity work.TestCtrl(basic_test);
     end for;
   end for;
-end Fifo_BasicTest;
+end basic_test;
