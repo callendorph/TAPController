@@ -8,4 +8,4 @@ include TestHarness.pro
 #SetLogSignals true
 SetSaveWaves true
 
-RunTest Fifo_BasicTest.vhd
+include testbench/testbench.pro
