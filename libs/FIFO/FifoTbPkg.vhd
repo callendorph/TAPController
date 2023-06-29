@@ -121,6 +121,18 @@ package FifoTbPkg is
     clk_period : in time
   );
 
+  procedure FifoTestSetup(
+    name : string;
+    result_dir : string
+    );
+
+  procedure CheckFifoCounts(
+    signal trans : inout FifoRecType;
+    variable ID : AlertLogIDType;
+    expCount : integer;
+    expTx : integer;
+    expRx : integer
+    );
 
 end FifoTbPkg;
 
@@ -208,5 +220,44 @@ package body FifoTbPkg is
     RD_EN <= '0';
   end FifoReadHandshake;
 
+  procedure FifoTestSetup(
+    name : string;
+    result_dir : string
+    ) is
+  begin
+      SetTestName("Fifo_" & name);
+      SetLogEnable(PASSED, TRUE);
+
+      wait for 0 ns;
+      -- These options are used to format the log output.
+      --   they don't affect the simulation in any way.
+      SetAlertLogOptions(WriteTimeLast => FALSE);
+      SetAlertLogOptions(TimeJustifyAmount => 16);
+      SetAlertLogJustify;
+
+      TranscriptOpen(result_dir & name & ".txt");
+      -- Write to both the console and file.
+      SetTranscriptMirror(TRUE);
+  end FifoTestSetup;
+
+  procedure CheckFifoCounts(
+    signal trans : inout FifoRecType;
+    variable ID : AlertLogIDType;
+    expCount : integer;
+    expTx : integer;
+    expRx : integer
+    ) is
+    variable obs : integer;
+  begin
+    GetCount(trans, obs);
+    AffirmIfEqual(ID, obs, expCount, "Fifo Count");
+
+    GetTxCount(trans, obs);
+    AffirmIfEqual(ID, obs, expTx, "Transmit Count");
+
+    GetRxCount(trans, obs);
+    AffirmIfEqual(ID, obs, expRx, "Read Count");
+
+  end CheckFifoCounts;
 
 end FifoTbPkg;
