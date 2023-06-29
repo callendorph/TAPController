@@ -1,7 +1,3 @@
-
-use work.FifoTbPkg.all;
-
---
 -- Basic Fifo Unit test for the Fifo verification component.
 --   None of this is intended to be instantiated.
 architecture basic_test of TestCtrl is
