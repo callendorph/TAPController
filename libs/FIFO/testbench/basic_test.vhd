@@ -28,7 +28,7 @@ begin
   TxProc : process
     variable fifoID : AlertLogIDType;
     variable widthVal, depthVal : integer;
-    variable obs : Fifo_Out_DataType;
+    variable obs : std_logic_vector(WIDTH-1 downto 0);
   begin
 
     GetAlertLogID(FifoRec, fifoID);
