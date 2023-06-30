@@ -71,13 +71,23 @@ architecture model of FifoVC is
   --  the elements of the fifo.
   signal fifo : osvvm.ScoreboardPkg_slv.ScoreboardIDType;
 
+  -- I'm using these signals as flags that indicate when
+  --   a transmit or receive operation has been complete.
+  --   These help to signal when a blocking read/write can
+  --   proceed.
+  signal rxSigFlag : std_logic := '0';
+  signal rxVirtFlag : std_logic := '0';
+
+  signal txSigFlag : std_logic := '0';
+  signal txVirtFlag : std_logic := '0';
+
   -- The hardware FIFO is of fixed length. This method is a
   --  helper to determine if the fifo is full.
   impure function IsFull(
     constant ID : in osvvm.ScoreboardPkg_slv.ScoreboardIDType
     ) return boolean is
     begin
-      return GetFifoCount(ID) >= (DEPTH-1);
+      return GetFifoCount(ID) >= DEPTH;
     end ;
 
   subtype fifo_elem is std_logic_vector(WIDTH-1 downto 0);
@@ -128,17 +138,15 @@ begin
             TransRec.BoolFromModel <= TRUE ;
             if Empty(fifo) then
               -- Wait for data
-              wait until not Empty(fifo);
+              wait until txVirtFlag'event or txSigFlag'event;
             else
-              -- Settling for when not Empty at current time,
-              --   but ReceiveCount not updated yet
-              -- ReceiveCount used in reporting below.
+              -- Settling for when not Empty at current time
               wait for 0 ns ;
             end if ;
             -- Put Data and Parameters into record
             RxStim := Pop(fifo) ;
             TransRec.DataFromModel <= SafeResize(RxStim,  TransRec.DataFromModel'length) ;
-
+            Toggle(rxVirtFlag);
             if IsCheck(Operation) then
               ExpectedStim := SafeResize(TransRec.DataToModel, ExpectedStim'length);
               if RxStim = ExpectedStim then -- Match
@@ -160,32 +168,44 @@ begin
               ) ;
             end if ;
           end if ;
-        when SEND | SEND_ASYNC =>
+        when SEND =>
           -- Enqueue data into the TxFifo
           TxStim := SafeResize(TransRec.DataToModel, TxStim'length);
           if IsFull(fifo) then
-            if Operation = SEND then
-              -- I'm interpretting this as a blocking write to
-              -- the queue - so if the queue is FULL I'm going to
-              -- wait until there is space
-              wait until not IsFull(fifo);
-            else
-              AffirmError(
-                ModelID,
-                "Transmit: " & to_string(TxStim) &
-                ".  Overflow! "  &
-                "  Operation # " & to_string(GetPushCount(fifo) + 1)
-                );
-            end if;
-          else
-            Push(fifo, TxStim);
-            Log(ModelID,
-                "SEND Queueing Transaction: " & to_string(TxStim) &
-                "  TxOp # " & to_string(GetPushCount(fifo)),
-                INFO, Enable => TransRec.BoolToModel
-                );
-
+            -- I'm interpretting this as a blocking write to
+            -- the queue - so if the queue is FULL I'm going to
+            -- wait until there is space
+            -- Note that I can't use `IsFull` in the wait here
+            --   so I'm using these flags to indicate a change
+            --   in the receive state
+            wait until rxVirtFlag'event or rxSigFlag'event;
           end if;
+          Push(fifo, TxStim);
+          Toggle(txVirtFlag);
+          Log(ModelID,
+              "SEND Queueing Transaction: " & to_string(TxStim) &
+              "  TxOp # " & to_string(GetPushCount(fifo)),
+              INFO, Enable => TransRec.BoolToModel
+              );
+          wait for 0 ns ;
+        when SEND_ASYNC =>
+          TxStim := SafeResize(TransRec.DataToModel, TxStim'length);
+          if IsFull(fifo) then
+            AffirmError(
+              ModelID,
+              "Transmit: " & to_string(TxStim) &
+              ".  Overflow! "  &
+              "  Operation # " & to_string(GetPushCount(fifo) + 1)
+              );
+          end if;
+          Push(fifo, TxStim);
+          Toggle(txVirtFlag);
+          Log(ModelID,
+              "SEND_ASYNC Queueing Transaction: " & to_string(TxStim) &
+              "  TxOp # " & to_string(GetPushCount(fifo)),
+              INFO, Enable => TransRec.BoolToModel
+              );
+
           wait for 0 ns ;
 
         when WAIT_FOR_TRANSACTION =>
@@ -253,12 +273,13 @@ begin
           if IsFull(fifo) then
             WR_ACK <= '0';
             -- This is an indication of an overflow
-            -- We should probably trigger an alert or something
-            -- here.
-            Alert(ModelID, "Write Overflow", FAILURE);
+            -- This isn't really an error.
+            -- @TODO overflow flag.
+            Log(ModelID, "Write Overflow", INFO);
           else
             WR_ACK <= '1';
             Push(fifo, DIN);
+            Toggle(txSigFlag);
           end if;
         else
           WR_ACK <= '0';
@@ -274,18 +295,22 @@ begin
   begin
     if rising_edge(CLK) then
       if RESET_n = '1' then
+        if RD_EN = '1' then
+          if not Empty(fifo) then
+            popOut := Pop(fifo);
+            Toggle(rxSigFlag);
+          else
+            -- Underflow condition
+            Alert(ModelID, "Read Underflow", FAILURE);
+          end if;
+        end if;
+
         if Empty(fifo) then
           VALID <= '0';
           readOut := (others => 'X');
-          if RD_EN = '1' then
-            Alert(ModelID, "Read Underflow", FAILURE);
-          end if;
         else
-          readOut := Peek(fifo);
           VALID <= '1';
-          if RD_EN = '1' then
-            popOut := Pop(fifo);
-          end if;
+          readOut := Peek(fifo);
         end if;
 
         DOUT <= readOut;
