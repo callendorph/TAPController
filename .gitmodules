@@ -1,0 +1,9 @@
+[submodule "osvvm/osvvm"]
+	path = osvvm/osvvm
+	url = https://github.com/OSVVM/osvvm.git
+[submodule "osvvm/Scripts"]
+	path = osvvm/Scripts
+	url = https://github.com/OSVVM/OSVVM-Scripts.git
+[submodule "osvvm/Common"]
+	path = osvvm/Common
+	url = https://github.com/OSVVM/OSVVM-Common.git
