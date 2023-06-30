@@ -1,0 +1,5 @@
+#!/usr/bin/tclsh
+source osvvm/Scripts/StartUp.tcl
+
+build ./osvvm/OsvvmLibraries.pro
+build ./libs/FIFO/RunTest.pro
