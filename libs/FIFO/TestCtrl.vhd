@@ -20,7 +20,9 @@ use work.OsvvmTestCommonPkg.all;
 
 entity TestCtrl is
   generic (
-    tperiod_CLK    : time := 10 ns
+    tperiod_CLK    : time;
+    WIDTH : integer;
+    DEPTH : integer
   );
   port (
     -- Record Interface
@@ -33,11 +35,11 @@ entity TestCtrl is
     -- Fifo Signal Interface
 
     -- Read Interface
-    DOUT           : in    std_logic_vector(FIFO_WIDTH-1 downto 0);
+    DOUT           : in    std_logic_vector(WIDTH-1 downto 0);
     VALID          : in    std_logic;
     RD_EN          : out   std_logic;
     -- Write Interface
-    DIN            : out   std_logic_vector(FIFO_WIDTH-1 downto 0);
+    DIN            : out   std_logic_vector(WIDTH-1 downto 0);
     WR_EN          : out   std_logic;
     WR_ACK         : in    std_logic
   );

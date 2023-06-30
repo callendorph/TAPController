@@ -5,11 +5,10 @@ architecture tx_blocking of TestCtrl is
 
   signal testActive  : boolean := TRUE;
   signal testDone    : integer_barrier := 1;
-  constant DEPTH : integer := 8;
-  constant WIDTH : integer := 36;
 
   type test_vector_array is array (natural range <>) of std_logic_vector;
-  constant test_vecs : test_vector_array(0 to DEPTH+2)(WIDTH-1 downto 0) := (
+  constant VEC_LEN : integer := DEPTH+2;
+  constant test_vecs : test_vector_array(0 to VEC_LEN-1)(WIDTH-1 downto 0) := (
     X"1_10001000",
     X"2_10002000",
     X"3_10003000",
@@ -19,8 +18,7 @@ architecture tx_blocking of TestCtrl is
     X"7_000A0005",
     X"8_0000A002",
     X"9_0F001001",
-    X"A_0F002002",
-    X"B_0F003003"
+    X"A_0F002002"
     );
 
 begin
@@ -46,6 +44,7 @@ begin
   TxProc : process
     variable fifoID : AlertLogIDType;
     variable cnt : integer;
+
   begin
 
     GetAlertLogID(FifoRec, fifoID);
@@ -66,12 +65,12 @@ begin
       WaitForClock(FifoRec, 1);
     end loop;
 
-    CheckFifoCounts(FifoRec, FifoID, 8, 8, 0);
+    CheckFifoCounts(FifoRec, FifoID, DEPTH, DEPTH, 0);
 
     -- Attempt to write to the queue again but these
     --  next two requests should block until the
     --  receiving process catches up.
-    for i in DEPTH to DEPTH+2 loop
+    for i in DEPTH to VEC_LEN-1 loop
       Send(FifoRec, test_vecs(i));
       WaitForClock(FifoRec, 2);
     end loop;
@@ -89,7 +88,7 @@ begin
 
     end loop;
 
-    CheckFifoCounts(FifoRec, FifoID, 0, DEPTH+2+1, DEPTH+2+1);
+    CheckFifoCounts(FifoRec, FifoID, 0, VEC_LEN, VEC_LEN);
 
     testActive <= FALSE;
 
@@ -113,7 +112,7 @@ begin
     --  when attempting to send one of the last transactions.
     wait for tperiod_CLK * 30;
 
-    for i in 0 to DEPTH+2 loop
+    for i in 0 to VEC_LEN-1 loop
       wait for tperiod_CLK * 2;
       FifoReadHandshake(DOUT, VALID, RD_EN, obs, tperiod_CLK);
       AffirmIfEqual(ID, obs, test_vecs(i), "Rx Value");
