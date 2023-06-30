@@ -44,11 +44,11 @@ architecture TestHarness of TbFifoVC is
       -- Fifo Signal Interface
 
       -- Read Interface
-      DOUT           : in    std_logic_vector(FIFO_WIDTH-1 downto 0);
+      DOUT           : in    std_logic_vector(WIDTH-1 downto 0);
       VALID          : in    std_logic;
       RD_EN          : out   std_logic;
       -- Write Interface
-      DIN            : out   std_logic_vector(FIFO_WIDTH-1 downto 0);
+      DIN            : out   std_logic_vector(WIDTH-1 downto 0);
       WR_EN          : out   std_logic;
       WR_ACK         : in    std_logic
       );

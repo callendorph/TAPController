@@ -9,14 +9,14 @@ context osvvm_common.OsvvmCommonContext;
 
 package FifoTbPkg is
 
-  -- I'm just testing with 36 right now but I think that
-  -- I need to make it the max possible width that the
-  -- xilinx FIFO generator can support. That way I can
-  -- test multiple different width types.
-  constant FIFO_WIDTH : integer := 36;
+  -- This the max width of the fifo. We spec the
+  --  records with this width so that we can build
+  --  tests that can test any fifo up to the max size.
+  --  the VC resizes internally to fit the FIFO.
+  constant MAX_FIFO_WIDTH : integer := 1024;
 
-  subtype Fifo_Out_DataType is std_logic_vector(FIFO_WIDTH-1 downto 0);
-  subtype Fifo_In_DataType is std_logic_vector(FIFO_WIDTH-1 downto 0);
+  subtype Fifo_Out_DataType is std_logic_vector(MAX_FIFO_WIDTH-1 downto 0);
+  subtype Fifo_In_DataType is std_logic_vector(MAX_FIFO_WIDTH-1 downto 0);
 
   subtype FifoRecType is StreamRecType (
     DataToModel (Fifo_In_DataType'range),
@@ -114,10 +114,10 @@ package FifoTbPkg is
   );
 
   procedure FifoReadHandshake(
-    signal DOUT : in Fifo_Out_DataType;
+    signal DOUT : in std_logic_vector;
     signal VALID : in std_logic;
     signal RD_EN : out std_logic;
-    variable VAL : out Fifo_Out_DataType;
+    variable VAL : out std_logic_vector;
     clk_period : in time
   );
 
@@ -204,10 +204,10 @@ package body FifoTbPkg is
   end FifoWriteHandshake;
 
   procedure FifoReadHandshake(
-    signal DOUT : in Fifo_Out_DataType;
+    signal DOUT : in std_logic_vector;
     signal VALID : in std_logic;
     signal RD_EN : out std_logic;
-    variable VAL : out Fifo_Out_DataType;
+    variable VAL : out std_logic_vector;
     clk_period : in time
   ) is
   begin

@@ -99,7 +99,7 @@ begin
 
   RxProc : process
     variable ID : AlertLogIDType;
-    variable obs : Fifo_Out_DataType;
+    variable obs : std_logic_vector(WIDTH-1 downto 0);
   begin
 
     RD_EN <= '0';
