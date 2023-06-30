@@ -1,6 +1,12 @@
 waves/
 work-*.cf
 
+# OSVVM Directories
+VHDL_LIBS/
+reports/
+results/
+logs/
+
 # Emacs
 *~
 \#*\#
