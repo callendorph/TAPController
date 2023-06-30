@@ -32,7 +32,9 @@ architecture TestHarness of TbFifoVC is
 
   component TestCtrl
     generic (
-      tperiod_Clk    : time := 10 ns
+      tperiod_Clk    : time;
+      WIDTH : integer;
+      DEPTH : integer
       );
     port (
       FifoRec        : inout FifoRecType;
@@ -91,7 +93,9 @@ begin
 
   TestDriver : TestCtrl
     generic map (
-      tperiod_CLK => tperiod_CLK
+      tperiod_CLK => tperiod_CLK,
+      WIDTH => WIDTH,
+      DEPTH => DEPTH
       )
     port map (
       FifoRec => control,
