@@ -15,10 +15,14 @@ library OSVVM;
 library osvvm_common;
 context osvvm_common.OsvvmCommonContext;
 
+library TAP;
+  use TAP.JTAG.all;
+
+library tools;
+  use tools.BitTools.to_slv;
+
 library work;
-use work.JTAG.all;
-use work.BitTools.to_slv;
-use work.JtagTbPkg.all;
+  use work.JtagTbPkg.all;
 
 entity JtagDevVC is
   generic (
