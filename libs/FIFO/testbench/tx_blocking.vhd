@@ -24,7 +24,7 @@ architecture tx_blocking of TestCtrl is
 begin
   ControlProc : process
     begin
-      FifoTestSetup(tx_blocking'SIMPLE_NAME, OSVVM_RESULTS_DIR);
+      FifoTestSetup(tx_blocking'SIMPLE_NAME);
 
       -- Wait for Design Reset
       wait until RESET_n = '1';

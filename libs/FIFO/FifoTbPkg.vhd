@@ -121,10 +121,7 @@ package FifoTbPkg is
     clk_period : in time
   );
 
-  procedure FifoTestSetup(
-    name : string;
-    result_dir : string
-    );
+  procedure FifoTestSetup(name : string);
 
   procedure CheckFifoCounts(
     signal trans : inout FifoRecType;
@@ -220,10 +217,7 @@ package body FifoTbPkg is
     RD_EN <= '0';
   end FifoReadHandshake;
 
-  procedure FifoTestSetup(
-    name : string;
-    result_dir : string
-    ) is
+  procedure FifoTestSetup(name : string) is
   begin
       SetTestName(name);
       SetLogEnable(PASSED, TRUE);
@@ -235,7 +229,7 @@ package body FifoTbPkg is
       SetAlertLogOptions(TimeJustifyAmount => 16);
       SetAlertLogJustify;
 
-      TranscriptOpen(result_dir & name & ".txt");
+      TranscriptOpen(name & ".txt");
       -- Write to both the console and file.
       SetTranscriptMirror(TRUE);
   end FifoTestSetup;
