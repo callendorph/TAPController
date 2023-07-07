@@ -25,7 +25,7 @@ begin
 
   ControlProc : process
     begin
-      TapTestSetup(stress_2tx'SIMPLE_NAME);
+      TapTestSetup(stress_2tx'SIMPLE_NAME, LogPassed => FALSE);
 
       -- Wait for Design Reset
       wait until RESET_n = '1';

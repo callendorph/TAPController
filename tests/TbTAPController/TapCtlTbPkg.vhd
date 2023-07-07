@@ -16,7 +16,10 @@ library TbJtagVC;
 
 package TapCtlTbPkg is
 
-  procedure TapTestSetup(name : string);
+  procedure TapTestSetup(
+    name : string;
+    LogPassed : boolean := TRUE
+    );
 
   procedure Write_Handshake(
     signal write_en : out std_logic;
@@ -51,12 +54,13 @@ end TapCtlTbPkg;
 package body TapCtlTbPkg is
 
   procedure TapTestSetup(
-    name : string
+    name : string;
+    LogPassed : boolean := TRUE
     ) is
   begin
 
     SetTestName(name);
-    SetLogEnable(PASSED, TRUE);
+    SetLogEnable(PASSED, LogPassed);
 
     wait for 0 ns;
     -- These options are used to format the log output.
