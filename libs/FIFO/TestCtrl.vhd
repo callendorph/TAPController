@@ -16,7 +16,6 @@ library osvvm_common;
   context osvvm_common.OsvvmCommonContext;
 
 use work.FifoTbPkg.all;
-use work.OsvvmTestCommonPkg.all;
 
 entity TestCtrl is
   generic (

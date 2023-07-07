@@ -8,7 +8,7 @@ architecture basic_test of TestCtrl is
 begin
   ControlProc : process
     begin
-      FifoTestSetup(basic_test'SIMPLE_NAME, OSVVM_RESULTS_DIR);
+      FifoTestSetup(basic_test'SIMPLE_NAME);
 
       -- Wait for Design Reset
       wait until RESET_n = '1';
