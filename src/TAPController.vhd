@@ -2,9 +2,11 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+library tools;
+  use tools.BitTools.all;
+
 library work;
-use work.BitTools.all;
-use work.JTAG.all;
+  use work.JTAG.all;
 
 entity TAPController is
   generic (
