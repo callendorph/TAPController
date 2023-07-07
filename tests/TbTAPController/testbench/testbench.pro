@@ -8,3 +8,4 @@ RunTest overflow_mid.vhd
 RunTest underflow.vhd
 RunTest stress_1tx.vhd
 RunTest stress_2tx.vhd
+RunTest width16.vhd [generic WIDTH 16]

@@ -17,6 +17,9 @@ library TAP;
   use TAP.TAPPkg.all;
 
 entity TbTAPController is
+  generic (
+    WIDTH : integer := 32
+    );
 end TbTAPController ;
 
 architecture TestHarness of TbTAPController is
@@ -24,8 +27,6 @@ architecture TestHarness of TbTAPController is
   constant tperiod_CLK      : time := 10 ns ;
   constant tperiod_JTAG_CLK : time := 100 ns;
   constant tpd              : time := 2 ns ;
-
-  constant WIDTH            : integer := 32;
 
   signal clk            : std_logic := '0' ;
   signal jtag_clk       : std_logic := '0';
