@@ -21,7 +21,7 @@ begin
       SetAlertLogOptions(TimeJustifyAmount => 16);
       SetAlertLogJustify;
 
-      TranscriptOpen(OSVVM_RESULTS_DIR & name & ".txt");
+      TranscriptOpen(name & ".txt");
       -- Write to both the console and file.
       SetTranscriptMirror(TRUE);
 
