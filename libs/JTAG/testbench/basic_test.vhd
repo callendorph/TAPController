@@ -1,6 +1,4 @@
 -- Basic Unit test for the Jtag Device Verification Component
-library work;
-  use work.JTAG.all;
 
 architecture basic_test of TestCtrl is
 

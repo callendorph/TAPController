@@ -10,9 +10,11 @@ library osvvm ;
 library osvvm_common;
   context osvvm_common.OsvvmCommonContext;
 
+library TAP;
+  use TAP.JTAG.all;
+
 library work;
   use work.JtagTbPkg.all;
-  use work.JTAG.all;
 
 entity TbJtagDevVC is
 end TbJtagDevVC;

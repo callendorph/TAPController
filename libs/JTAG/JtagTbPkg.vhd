@@ -7,8 +7,8 @@ context OSVVM.OsvvmContext;
 library osvvm_common;
 context osvvm_common.OsvvmCommonContext;
 
-library work;
-  use work.JTAG.all;
+library TAP;
+  use TAP.JTAG.all;
 
 package JtagTbPkg is
 

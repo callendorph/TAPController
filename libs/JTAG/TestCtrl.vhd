@@ -14,7 +14,11 @@ library OSVVM ;
 library osvvm_common;
   context osvvm_common.OsvvmCommonContext;
 
-use work.JtagTbPkg.all;
+library TAP;
+  use TAP.JTAG.all;
+
+library work;
+  use work.JtagTbPkg.all;
 
 entity TestCtrl is
   generic (
