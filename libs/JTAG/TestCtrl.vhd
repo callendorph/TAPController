@@ -15,7 +15,6 @@ library osvvm_common;
   context osvvm_common.OsvvmCommonContext;
 
 use work.JtagTbPkg.all;
-use work.OsvvmTestCommonPkg.all;
 
 entity TestCtrl is
   generic (

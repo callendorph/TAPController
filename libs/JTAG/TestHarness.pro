@@ -1,7 +1,6 @@
 
 library TbJtagVC
 
-analyze OsvvmTestCommonPkg.vhd
 analyze ../../src/JTAG.vhd
 analyze ../tools/BitTools.vhd
 analyze JtagTbPkg.vhd
