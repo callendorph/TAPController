@@ -365,7 +365,7 @@ begin
 
 
   tms_control : process(
-    curr_state, FORCE_RESET, din_empty, din_last_bit, DR_IR, EOS_hold
+    curr_state, din_empty, din_last_bit, DR_IR, EOS_hold
     )
   begin
     case curr_state is
